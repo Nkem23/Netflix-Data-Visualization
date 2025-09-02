@@ -1,0 +1,102 @@
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Step 1: Rename file 
+old_name = "netflix_data.csv"
+new_name = "Netflix_shows_movies.csv"
+
+if os.path.exists(old_name) and not os.path.exists(new_name):
+    os.rename(old_name, new_name)
+    print(f"File renamed to: {new_name}")
+
+
+
+# Step 2: load dataset
+df = pd.read_csv(new_name)
+print("Data loaded successfully.")
+print(df.shape)
+print(df.head())
+
+
+# Step 3: Data Cleaning
+
+# a) Fill missing values
+df["director"].fillna("Unknown", inplace=True)
+df["cast"].fillna("Unknown", inplace=True)
+df["country"].fillna("Unknown", inplace=True)
+df["rating"].fillna("Not Rated", inplace=True)
+df["date_added"] = pd.to_datetime(df["date_added"], errors="coerce")
+
+
+#b) Split duration into two : duration_num and duration_unit
+df[["duration_num", "duration_unit"]] = df["duration"].str.extract(r'(\d+)\s*(\w+)')
+df["duration_num"] = pd.to_numeric(df["duration_num"], errors="coerce")
+
+#c) Convert date_added to datetime
+df["date_added"] = pd.to_datetime(df["date_added"], errors="coerce")
+
+
+# Step 4: Data Exploration
+# a. Data Summary statistics
+print(df.describe(include="all"))
+
+# b. Counts for type, rating and losted_in column
+print(df["type"].value_counts())
+print(df["rating"].value_counts())
+print(df["listed_in"].value_counts().head(10))
+
+
+#  Step 5: Data Manipulation
+# a. Split genres and explode into rows
+genre_df = df.assign(genre=df["listed_in"].str.split(", ")) \
+             .explode("genre")
+
+# b. Count most common genres
+top_genres = genre_df["genre"].value_counts().head(10)
+print(top_genres)
+
+
+# Step 6: Data Visualisation
+
+# a. Most Watched Genres
+plt.figure(figsize=(10,6))
+sns.barplot(y=top_genres.index, x=top_genres.values, palette="viridis")
+plt.title("Top 10 Most Watched Genres on Netflix")
+plt.xlabel("Number of Titles")
+plt.ylabel("Genre")
+plt.savefig("Top 10 Most Watched Genres on Netflix.png")
+plt.show()
+
+# b. Distribution of Ratings
+plt.figure(figsize=(10,6))
+sns.countplot(data=df, x="rating", order=df["rating"].value_counts().index, palette="coolwarm")
+plt.title("Distribution of Ratings")
+plt.xlabel("Rating")
+plt.ylabel("Count")
+plt.xticks(rotation=45)
+plt.savefig("Distribution of Ratings.png")
+plt.show()
+
+# c. Trend of Titles Added Over Time
+df["year_added"] = df["date_added"].dt.year
+df = df.dropna(subset=["year_added"])
+df["year_added"] = df["year_added"].astype(int)
+
+titles_per_year = df["year_added"].value_counts().sort_index()
+
+plt.figure(figsize=(12,6))
+titles_per_year.plot(kind="bar", color="skyblue")
+plt.title("Number of Titles Added to Netflix by Year")
+plt.xlabel("Year Added")
+plt.ylabel("Number of Titles")
+plt.tight_layout()
+plt.savefig("Number of Titles Added to Netflix by Year.png")
+plt.show()
+
+
+# Step 7: Save cleaned dataset
+df.to_csv("Netflix_shows_movies_cleaned.csv", index=False)
+
+
