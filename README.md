@@ -3,7 +3,7 @@ This repository contains an analysis of the Netflix dataset using Python and R.
 The project covers data cleaning, exploratory analysis, and visualization to uncover insights about Netflix shows and movies.
 
 # Repository Files
-Netflix Data with Python .py.txt     # Python script for cleaning, analysis, and visualization
+netflix data with Python.py     # Python script for cleaning, analysis, and visualization
 
 Netflix Data with R.r                # R script for analysis and visualization
 
